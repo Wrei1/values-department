@@ -1,67 +1,68 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 interface Inquiry {
   id: string;
-  name: string;
+  fullName: string;
   email: string;
+  phone: string;
   serviceType: string;
-  status: 'pending' | 'approved' | 'rejected';
-  submittedDate: string;
+  status: 'pending' | 'approved' | 'rejected' | 'in-review' | 'completed';
+  createdAt: Timestamp | null;
   message: string;
 }
 
 export default function AdminDashboard() {
-  // Mock data - in production, this would come from an API/database
-  const [inquiries] = useState<Inquiry[]>([
-    {
-      id: '001',
-      name: 'John Smith',
-      email: 'john.smith@email.com',
-      serviceType: 'Marriage Counseling',
-      status: 'pending',
-      submittedDate: '2026-02-04',
-      message: 'Looking to schedule marriage counseling sessions...'
-    },
-    {
-      id: '002',
-      name: 'Sarah Johnson',
-      email: 'sarah.j@email.com',
-      serviceType: 'Pre-Marriage Counseling',
-      status: 'approved',
-      submittedDate: '2026-02-03',
-      message: 'Interested in pre-marriage counseling program...'
-    },
-    {
-      id: '003',
-      name: 'Michael Brown',
-      email: 'mbrown@email.com',
-      serviceType: 'Marriage Registration',
-      status: 'approved',
-      submittedDate: '2026-02-02',
-      message: 'Need assistance with marriage registration...'
-    },
-    {
-      id: '004',
-      name: 'Emily Davis',
-      email: 'emily.davis@email.com',
-      serviceType: 'General Inquiry',
-      status: 'pending',
-      submittedDate: '2026-02-01',
-      message: 'Have questions about your services...'
-    },
-    {
-      id: '005',
-      name: 'David Wilson',
-      email: 'dwilson@email.com',
-      serviceType: 'Pre-Marriage Counseling',
-      status: 'rejected',
-      submittedDate: '2026-01-31',
-      message: 'Request for counseling information...'
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string>('');
+
+  // Fetch inquiries from Firestore with real-time updates
+  useEffect(() => {
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const q = query(
+        collection(db, 'inquiries'),
+        orderBy('createdAt', 'desc')
+      );
+
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          const inquiriesData: Inquiry[] = snapshot.docs.map(doc => ({
+            id: doc.id,
+            fullName: doc.data().fullName || '',
+            email: doc.data().email || '',
+            phone: doc.data().phone || '',
+            serviceType: doc.data().serviceType || '',
+            message: doc.data().message || '',
+            status: doc.data().status || 'pending',
+            createdAt: doc.data().createdAt || null,
+          }));
+          
+          setInquiries(inquiriesData);
+          setIsLoading(false);
+        },
+        (err) => {
+          console.error('Error fetching inquiries:', err);
+          setError('Failed to load inquiries. Please check your Firebase configuration.');
+          setIsLoading(false);
+        }
+      );
+
+      return () => unsubscribe();
+    } catch (err) {
+      console.error('Error setting up Firestore listener:', err);
+      setError('Failed to connect to database. Please try again later.');
+      setIsLoading(false);
     }
-  ]);
+  }, []);
 
   const totalSubmissions = inquiries.length;
   const pendingRequests = inquiries.filter(i => i.status === 'pending').length;
@@ -105,10 +106,10 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-0">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-2">
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             Admin Dashboard
           </h1>
@@ -118,7 +119,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Statistics Cards */}
-        <div className="mb-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {/* Total Submissions */}
           <div className="overflow-hidden rounded-lg bg-white shadow">
             <div className="p-6">
@@ -231,13 +232,32 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
-                {inquiries.map((inquiry) => (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-500">
+                      Loading inquiries...
+                    </td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-8 text-center text-sm text-red-600">
+                      {error}
+                    </td>
+                  </tr>
+                ) : inquiries.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-6 py-8 text-center text-sm text-gray-500">
+                      No inquiries yet. New submissions will appear here.
+                    </td>
+                  </tr>
+                ) : (
+                  inquiries.slice(0, 5).map((inquiry) => (
                   <tr key={inquiry.id} className="hover:bg-gray-50">
                     <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                      #{inquiry.id}
+                      #{inquiry.id.slice(-6)}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                      {inquiry.name}
+                      {inquiry.fullName}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
                       {inquiry.email}
@@ -248,63 +268,80 @@ export default function AdminDashboard() {
                     <td className="whitespace-nowrap px-6 py-4 text-sm">
                       <span className={`inline-flex items-center space-x-1 rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(inquiry.status)}`}>
                         {getStatusIcon(inquiry.status)}
-                        <span className="capitalize">{inquiry.status}</span>
+                        <span className="capitalize">{inquiry.status.replace('-', ' ')}</span>
                       </span>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                      {new Date(inquiry.submittedDate).toLocaleDateString('en-US', {
+                      {inquiry.createdAt ? inquiry.createdAt.toDate().toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric'
-                      })}
+                      }) : 'N/A'}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                      <button 
+                      <Link
+                        href="/admin/inquiries"
                         className="text-blue-600 hover:text-blue-900 focus:outline-none focus:underline"
-                        aria-label={`View details for ${inquiry.name}`}
+                        aria-label={`View details for ${inquiry.fullName}`}
                       >
                         View
-                      </button>
+                      </Link>
                     </td>
                   </tr>
-                ))}
+                ))
+                )}
               </tbody>
             </table>
           </div>
 
           {/* Mobile Cards */}
           <div className="md:hidden">
-            {inquiries.map((inquiry) => (
+            {isLoading ? (
+              <div className="p-6 text-center text-sm text-gray-500">
+                Loading inquiries...
+              </div>
+            ) : error ? (
+              <div className="p-6 text-center text-sm text-red-600">
+                {error}
+              </div>
+            ) : inquiries.length === 0 ? (
+              <div className="p-6 text-center text-sm text-gray-500">
+                No inquiries yet. New submissions will appear here.
+              </div>
+            ) : (
+              inquiries.slice(0, 5).map((inquiry) => (
               <div key={inquiry.id} className="border-b border-gray-200 p-4 last:border-b-0">
                 <div className="mb-2 flex items-start justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{inquiry.name}</p>
-                    <p className="text-xs text-gray-500">#{inquiry.id}</p>
+                    <p className="text-sm font-medium text-gray-900">{inquiry.fullName}</p>
+                    <p className="text-xs text-gray-500">#{inquiry.id.slice(-6)}</p>
                   </div>
                   <span className={`inline-flex items-center space-x-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(inquiry.status)}`}>
                     {getStatusIcon(inquiry.status)}
-                    <span className="capitalize">{inquiry.status}</span>
+                    <span className="capitalize">{inquiry.status.replace('-', ' ')}</span>
                   </span>
                 </div>
                 <div className="space-y-1 text-sm">
                   <p className="text-gray-600">{inquiry.email}</p>
                   <p className="text-gray-500">{inquiry.serviceType}</p>
                   <p className="text-gray-400">
-                    {new Date(inquiry.submittedDate).toLocaleDateString('en-US', {
+                    {inquiry.createdAt ? inquiry.createdAt.toDate().toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'short',
                       day: 'numeric'
-                    })}
+                    }) : 'N/A'}
                   </p>
                 </div>
-                <button 
-                  className="mt-3 text-sm font-medium text-blue-600 hover:text-blue-900 focus:outline-none focus:underline"
-                  aria-label={`View details for ${inquiry.name}`}
+                <Link
+                  href="/admin/inquiries"
+                  className="mt-3 inline-block text-sm font-medium text-blue-600 hover:text-blue-900 focus:outline-none focus:underline"
+                  aria-label={`View details for ${inquiry.fullName}`}
                 >
                   View Details
-                </button>
+                </Link>
               </div>
-            ))}
+            ))
+            )}
           </div>
         </div>
 

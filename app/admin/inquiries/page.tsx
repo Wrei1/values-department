@@ -177,7 +177,7 @@ export default function AdminInquiries() {
                 id="service-type-filter"
                 value={serviceTypeFilter}
                 onChange={(e) => setServiceTypeFilter(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 px-3 py-3 text-base shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[48px]"
+                className="mt-1 block w-full rounded-md border-2 border-gray-300 px-3 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[48px] bg-white"
                 aria-label="Filter inquiries by service type"
               >
                 <option value="all">All Service Types</option>
@@ -198,7 +198,7 @@ export default function AdminInquiries() {
                 id="status-filter"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 px-3 py-3 text-base shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[48px]"
+                className="mt-1 block w-full rounded-md border-2 border-gray-300 px-3 py-3 text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[48px] bg-white"
                 aria-label="Filter inquiries by status"
               >
                 <option value="all">All Statuses</option>
