@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { FirebaseError } from 'firebase/app';
 import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -20,6 +21,19 @@ export default function AdminDashboard() {
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
+
+  const formatFirestoreError = (err: unknown) => {
+    if (err instanceof FirebaseError) {
+      const code = err.code ? ` (${err.code})` : '';
+      return `${err.message}${code}`.trim();
+    }
+
+    if (err instanceof Error) {
+      return err.message;
+    }
+
+    return 'Unknown error.';
+  };
 
   // Fetch inquiries from Firestore with real-time updates
   useEffect(() => {
@@ -51,7 +65,8 @@ export default function AdminDashboard() {
         },
         (err) => {
           console.error('Error fetching inquiries:', err);
-          setError('Failed to load inquiries. Please check your Firebase configuration.');
+          const details = formatFirestoreError(err);
+          setError(`Failed to load inquiries. ${details}`);
           setIsLoading(false);
         }
       );
@@ -59,7 +74,8 @@ export default function AdminDashboard() {
       return () => unsubscribe();
     } catch (err) {
       console.error('Error setting up Firestore listener:', err);
-      setError('Failed to connect to database. Please try again later.');
+      const details = formatFirestoreError(err);
+      setError(`Failed to connect to database. ${details}`);
       setIsLoading(false);
     }
   }, []);
