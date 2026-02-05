@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, FormEvent, ChangeEvent } from 'react';
+import { FirebaseError } from 'firebase/app';
 import { collection, doc, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -153,7 +154,13 @@ export default function Contact() {
       }, 5000);
     } catch (error) {
       console.error('Error submitting inquiry:', error);
-      setSubmitError('Failed to submit your inquiry. Please try again or contact us directly.');
+      if (error instanceof FirebaseError) {
+        setSubmitError(`Failed to submit your inquiry. ${error.message} (${error.code})`);
+      } else if (error instanceof Error) {
+        setSubmitError(`Failed to submit your inquiry. ${error.message}`);
+      } else {
+        setSubmitError('Failed to submit your inquiry. Please try again or contact us directly.');
+      }
     } finally {
       setIsSubmitting(false);
     }
