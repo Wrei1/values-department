@@ -4,12 +4,13 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FirebaseError } from 'firebase/app';
-import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, Timestamp, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 
 interface Inquiry {
   id: string;
+  inquiryNumber?: number;
   fullName: string;
   email: string;
   phone: string;
@@ -75,6 +76,7 @@ export default function AdminDashboard() {
         (snapshot) => {
           const inquiriesData: Inquiry[] = snapshot.docs.map(doc => ({
             id: doc.id,
+            inquiryNumber: typeof doc.data().inquiryNumber === 'number' ? doc.data().inquiryNumber : undefined,
             fullName: doc.data().fullName || '',
             email: doc.data().email || '',
             phone: doc.data().phone || '',
@@ -117,6 +119,8 @@ export default function AdminDashboard() {
         return 'bg-green-100 text-green-800';
       case 'rejected':
         return 'bg-red-100 text-red-800';
+      case 'in-review':
+        return 'bg-blue-100 text-blue-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -142,6 +146,134 @@ export default function AdminDashboard() {
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
           </svg>
         );
+    }
+  };
+
+  const formatInquiryNumber = (id: string, inquiryNumber?: number) => {
+    if (typeof inquiryNumber === 'number') return inquiryNumber.toString();
+    const chunk = id.slice(-6);
+    const parsed = Number.parseInt(chunk, 36);
+    if (Number.isNaN(parsed)) return id.slice(-4);
+    return parsed.toString();
+  };
+
+  const formatDateTime = (timestamp: Timestamp | null) => {
+    if (!timestamp) return 'N/A';
+    try {
+      return timestamp.toDate().toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return 'N/A';
+    }
+  };
+
+  const downloadFile = (content: string, filename: string, type: string) => {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportCsv = () => {
+    if (inquiries.length === 0) return;
+
+    const escapeCsv = (value: string) => {
+      const safe = value.replace(/"/g, '""');
+      return `"${safe}"`;
+    };
+
+    const headers = [
+      'ID',
+      'Full Name',
+      'Email',
+      'Phone',
+      'Service Type',
+      'Status',
+      'Created At',
+      'Message'
+    ];
+
+    const rows = inquiries.map((inquiry) => [
+      inquiry.id,
+      inquiry.fullName,
+      inquiry.email,
+      inquiry.phone,
+      inquiry.serviceType,
+      inquiry.status,
+      formatDateTime(inquiry.createdAt),
+      inquiry.message
+    ].map((cell) => escapeCsv(String(cell))).join(','));
+
+    const csv = [headers.join(','), ...rows].join('\n');
+    downloadFile(csv, `inquiries-${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv');
+  };
+
+  const handleGenerateReport = () => {
+    if (inquiries.length === 0) return;
+
+    const byStatus = inquiries.reduce<Record<string, number>>((acc, inquiry) => {
+      acc[inquiry.status] = (acc[inquiry.status] || 0) + 1;
+      return acc;
+    }, {});
+
+    const byService = inquiries.reduce<Record<string, number>>((acc, inquiry) => {
+      acc[inquiry.serviceType] = (acc[inquiry.serviceType] || 0) + 1;
+      return acc;
+    }, {});
+
+    const newest = inquiries[0];
+    const oldest = inquiries[inquiries.length - 1];
+
+    const reportLines = [
+      'Values Department - Inquiries Report',
+      `Generated: ${new Date().toLocaleString('en-US')}`,
+      '',
+      `Total inquiries: ${inquiries.length}`,
+      `Date range: ${formatDateTime(oldest?.createdAt || null)} to ${formatDateTime(newest?.createdAt || null)}`,
+      '',
+      'By Status:',
+      ...Object.entries(byStatus).map(([status, count]) => `- ${status}: ${count}`),
+      '',
+      'By Service Type:',
+      ...Object.entries(byService).map(([service, count]) => `- ${service}: ${count}`)
+    ];
+
+    downloadFile(reportLines.join('\n'), `inquiries-report-${new Date().toISOString().slice(0, 10)}.txt`, 'text/plain');
+  };
+
+  const handleStatusUpdate = async (id: string, status: Inquiry['status']) => {
+    try {
+      const docRef = doc(db, 'inquiries', id);
+      await updateDoc(docRef, {
+        status,
+        lastUpdated: Timestamp.now()
+      });
+    } catch (err) {
+      console.error('Error updating inquiry status:', err);
+      alert('Failed to update status. Please try again.');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const confirmed = window.confirm('Are you sure you want to delete this inquiry? This action cannot be undone.');
+    if (!confirmed) return;
+
+    try {
+      const docRef = doc(db, 'inquiries', id);
+      await deleteDoc(docRef);
+    } catch (err) {
+      console.error('Error deleting inquiry:', err);
+      alert('Failed to delete inquiry. Please try again.');
     }
   };
 
@@ -294,7 +426,7 @@ export default function AdminDashboard() {
                   inquiries.slice(0, 5).map((inquiry) => (
                   <tr key={inquiry.id} className="hover:bg-gray-50">
                     <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                      #{inquiry.id.slice(-6)}
+                      #{formatInquiryNumber(inquiry.id, inquiry.inquiryNumber)}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                       {inquiry.fullName}
@@ -319,13 +451,50 @@ export default function AdminDashboard() {
                       }) : 'N/A'}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                      <Link
-                        href="/admin/inquiries"
-                        className="text-blue-600 hover:text-blue-900 focus:outline-none focus:underline"
-                        aria-label={`View details for ${inquiry.fullName}`}
-                      >
-                        View
-                      </Link>
+                      <div className="flex items-center justify-end gap-3">
+                        <Link
+                          href={`/admin/inquiries/${inquiry.id}`}
+                          className="text-blue-600 hover:text-blue-900 focus:outline-none focus:underline"
+                          aria-label={`View details for ${inquiry.fullName}`}
+                        >
+                          View
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => handleStatusUpdate(inquiry.id, 'approved')}
+                          disabled={inquiry.status === 'approved' || inquiry.status === 'rejected' || inquiry.status === 'completed'}
+                          className="text-green-600 hover:text-green-800 focus:outline-none focus:underline disabled:cursor-not-allowed disabled:text-gray-400"
+                          aria-label={`Approve inquiry from ${inquiry.fullName}`}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleStatusUpdate(inquiry.id, 'rejected')}
+                          disabled={inquiry.status === 'rejected' || inquiry.status === 'approved' || inquiry.status === 'completed'}
+                          className="text-red-600 hover:text-red-800 focus:outline-none focus:underline disabled:cursor-not-allowed disabled:text-gray-400"
+                          aria-label={`Reject inquiry from ${inquiry.fullName}`}
+                        >
+                          Reject
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleStatusUpdate(inquiry.id, 'in-review')}
+                          disabled={inquiry.status === 'in-review' || inquiry.status === 'approved' || inquiry.status === 'rejected' || inquiry.status === 'completed'}
+                          className="text-blue-600 hover:text-blue-800 focus:outline-none focus:underline disabled:cursor-not-allowed disabled:text-gray-400"
+                          aria-label={`Mark inquiry from ${inquiry.fullName} as in review`}
+                        >
+                          In Review
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(inquiry.id)}
+                          className="text-gray-500 hover:text-gray-700 focus:outline-none focus:underline"
+                          aria-label={`Delete inquiry from ${inquiry.fullName}`}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -354,7 +523,7 @@ export default function AdminDashboard() {
                 <div className="mb-2 flex items-start justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-900">{inquiry.fullName}</p>
-                    <p className="text-xs text-gray-500">#{inquiry.id.slice(-6)}</p>
+                    <p className="text-xs text-gray-500">#{formatInquiryNumber(inquiry.id, inquiry.inquiryNumber)}</p>
                   </div>
                   <span className={`inline-flex items-center space-x-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(inquiry.status)}`}>
                     {getStatusIcon(inquiry.status)}
@@ -372,13 +541,50 @@ export default function AdminDashboard() {
                     }) : 'N/A'}
                   </p>
                 </div>
-                <Link
-                  href="/admin/inquiries"
-                  className="mt-3 inline-block text-sm font-medium text-blue-600 hover:text-blue-900 focus:outline-none focus:underline"
-                  aria-label={`View details for ${inquiry.fullName}`}
-                >
-                  View Details
-                </Link>
+                <div className="mt-3 flex flex-wrap gap-3 text-sm font-medium">
+                  <Link
+                    href={`/admin/inquiries/${inquiry.id}`}
+                    className="text-blue-600 hover:text-blue-900 focus:outline-none focus:underline"
+                    aria-label={`View details for ${inquiry.fullName}`}
+                  >
+                    View Details
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => handleStatusUpdate(inquiry.id, 'approved')}
+                    disabled={inquiry.status === 'approved' || inquiry.status === 'rejected' || inquiry.status === 'completed'}
+                    className="text-green-600 hover:text-green-800 focus:outline-none focus:underline disabled:cursor-not-allowed disabled:text-gray-400"
+                    aria-label={`Approve inquiry from ${inquiry.fullName}`}
+                  >
+                    Approve
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleStatusUpdate(inquiry.id, 'rejected')}
+                    disabled={inquiry.status === 'rejected' || inquiry.status === 'approved' || inquiry.status === 'completed'}
+                    className="text-red-600 hover:text-red-800 focus:outline-none focus:underline disabled:cursor-not-allowed disabled:text-gray-400"
+                    aria-label={`Reject inquiry from ${inquiry.fullName}`}
+                  >
+                    Reject
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleStatusUpdate(inquiry.id, 'in-review')}
+                    disabled={inquiry.status === 'in-review' || inquiry.status === 'approved' || inquiry.status === 'rejected' || inquiry.status === 'completed'}
+                    className="text-blue-600 hover:text-blue-800 focus:outline-none focus:underline disabled:cursor-not-allowed disabled:text-gray-400"
+                    aria-label={`Mark inquiry from ${inquiry.fullName} as in review`}
+                  >
+                    In Review
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(inquiry.id)}
+                    className="text-gray-500 hover:text-gray-700 focus:outline-none focus:underline"
+                    aria-label={`Delete inquiry from ${inquiry.fullName}`}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             ))
             )}
@@ -390,7 +596,7 @@ export default function AdminDashboard() {
           <h3 className="mb-4 text-lg font-semibold text-gray-900">Quick Actions</h3>
           <div className="flex flex-wrap gap-4">
             <Link
-              href="/contact"
+              href="/admin/inquiries"
               className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -399,7 +605,10 @@ export default function AdminDashboard() {
               New Inquiry
             </Link>
             <button
-              className="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              type="button"
+              onClick={handleExportCsv}
+              disabled={inquiries.length === 0}
+              className="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
               aria-label="Export data"
             >
               <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -408,7 +617,10 @@ export default function AdminDashboard() {
               Export Data
             </button>
             <button
-              className="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              type="button"
+              onClick={handleGenerateReport}
+              disabled={inquiries.length === 0}
+              className="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
               aria-label="Generate report"
             >
               <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

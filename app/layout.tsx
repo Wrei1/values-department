@@ -10,12 +10,17 @@ export const metadata: Metadata = {
     template: "%s | Values Department"
   },
   description:
-    "Official government Values Department providing professional marriage counseling, pre-marriage counseling, and family support services. Strengthening families and communities through expert guidance.",
+    "Official government Values Department providing marriage counseling, wedding services, and community support. Strengthening families and communities through expert guidance.",
   keywords: [
     "values department",
     "government counseling",
     "marriage counseling",
-    "pre-marriage counseling",
+    "wedding services",
+    "civil wedding",
+    "private wedding",
+    "house blessing",
+    "prayer for the sick",
+    "necrological service",
     "family services",
     "relationship counseling",
     "government family support",
@@ -37,7 +42,7 @@ export const metadata: Metadata = {
     url: "/",
     siteName: "Values Department",
     title: "Values Department | Government Marriage & Family Counseling Services",
-    description: "Official government Values Department providing professional marriage counseling, pre-marriage counseling, and family support services.",
+    description: "Official government Values Department providing marriage counseling, wedding services, and community support.",
     images: [
       {
         url: "/og-image.jpg",
@@ -50,7 +55,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Values Department | Government Marriage & Family Counseling Services",
-    description: "Professional marriage counseling, pre-marriage counseling, and family support services.",
+    description: "Professional marriage counseling, wedding services, and community support.",
     images: ["/og-image.jpg"],
   },
   robots: {

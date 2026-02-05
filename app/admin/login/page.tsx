@@ -59,8 +59,11 @@ export default function AdminLoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 px-4 py-12 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8">
         {/* Header */}
-        <div>
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white/10 backdrop-blur-sm shadow-xl">
+        <div className="text-center">
+          <div className="mx-auto inline-flex items-center rounded-full bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-white/90 shadow-sm ring-1 ring-white/20">
+            Secure Admin Access
+          </div>
+          <div className="mx-auto mt-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm shadow-2xl ring-1 ring-white/20">
             <svg
               className="h-12 w-12 text-white"
               fill="none"
@@ -77,10 +80,10 @@ export default function AdminLoginPage() {
             </svg>
           </div>
           <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-white">
-            Admin Login
+            Admin Portal
           </h2>
           <p className="mt-2 text-center text-sm text-blue-100">
-            Sign in to access the admin dashboard
+            Sign in to manage inquiries and site operations
           </p>
         </div>
 
@@ -110,7 +113,7 @@ export default function AdminLoginPage() {
         )}
 
         {/* Login Form */}
-        <form className="mt-8 space-y-6 bg-white rounded-2xl shadow-2xl p-8" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6 rounded-2xl bg-white/95 p-8 shadow-2xl ring-1 ring-black/5 backdrop-blur" onSubmit={handleSubmit}>
           <div className="space-y-5">
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -220,10 +223,11 @@ export default function AdminLoginPage() {
             </button>
           </div>
 
-          <div className="text-center">
+          <div className="text-center space-y-2">
+            <p className="text-xs text-gray-500">Protected by Firebase Authentication</p>
             <Link
               href="/"
-              className="inline-block min-h-[44px] py-2 text-sm font-medium text-white/90 hover:text-white transition-colors focus:outline-none focus:underline"
+              className="inline-block min-h-[44px] py-2 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors focus:outline-none focus:underline"
             >
               ← Back to Homepage
             </Link>

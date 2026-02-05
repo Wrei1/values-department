@@ -3,12 +3,17 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Values Department | Government Marriage & Family Counseling Services',
-  description: 'Official government Values Department providing professional marriage counseling, pre-marriage counseling, and family support services. Strengthen families and communities through expert guidance.',
+  description: 'Official government Values Department providing marriage counseling, wedding services, and community support. Strengthen families and communities through expert guidance.',
   keywords: [
     'values department',
     'government counseling services',
     'marriage counseling',
-    'pre-marriage counseling',
+    'wedding services',
+    'civil wedding',
+    'private wedding',
+    'house blessing',
+    'prayer for the sick',
+    'necrological service',
     'family services',
     'relationship counseling',
     'government family support',
@@ -28,6 +33,41 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
+  const services = [
+    {
+      title: 'Marriage Counseling',
+      description: 'Professional support for couples seeking to strengthen their relationship, resolve conflicts, and build a lasting partnership.'
+    },
+    {
+      title: 'Marriage Registration',
+      description: 'Guidance on official registration, documentation, and civil requirements for marriage services.'
+    },
+    {
+      title: 'Civil Wedding',
+      description: 'Clear guidance and support for civil wedding requirements, scheduling, and certificates.'
+    },
+    {
+      title: 'Private Wedding',
+      description: 'Personalized assistance for private wedding coordination and documentation support.'
+    },
+    {
+      title: 'Necrological Service',
+      description: 'Compassionate support and coordination for families during times of loss.'
+    },
+    {
+      title: 'House blessing',
+      description: 'Arrange house blessing services with scheduling support and preparation guidance.'
+    },
+    {
+      title: 'House to house visitation',
+      description: 'Community visitation and outreach support for counseling and family guidance.'
+    },
+    {
+      title: 'Prayer for the sick',
+      description: 'Request prayer and compassionate support with scheduling and follow-up.'
+    }
+  ];
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-20">
@@ -46,58 +86,36 @@ export default function Home() {
           <h2 id="services-heading" className="mb-8 text-center text-2xl font-bold tracking-tight text-gray-900 sm:mb-10 sm:text-3xl lg:text-4xl">
             Our Services
           </h2>
-          <div className="mx-auto grid max-w-5xl gap-5 sm:gap-6 md:grid-cols-2 md:gap-8">
-            {/* Marriage Counseling */}
-            <article className="rounded-xl bg-white p-5 shadow-lg transition-shadow duration-300 hover:shadow-xl sm:p-6 lg:p-8">
-              <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 sm:mb-6 sm:h-16 sm:w-16">
-                <svg 
-                  className="w-7 h-7 sm:w-8 sm:h-8 text-white" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
-                  />
-                </svg>
-              </div>
-              <h3 className="mb-3 text-center text-lg font-bold text-gray-900 sm:mb-4 sm:text-xl lg:text-2xl">
-                Marriage Counseling
-              </h3>
-              <p className="text-center text-sm leading-relaxed text-gray-600 sm:text-base">
-                Professional support for couples seeking to strengthen their relationship, resolve conflicts, and build a lasting partnership
-              </p>
-            </article>
-
-            {/* Pre-Marriage Counseling */}
-            <article className="rounded-xl bg-white p-5 shadow-lg transition-shadow duration-300 hover:shadow-xl sm:p-6 lg:p-8">
-              <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 sm:mb-6 sm:h-16 sm:w-16">
-                <svg 
-                  className="w-7 h-7 sm:w-8 sm:h-8 text-white" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" 
-                  />
-                </svg>
-              </div>
-              <h3 className="mb-3 text-center text-lg font-bold text-gray-900 sm:mb-4 sm:text-xl lg:text-2xl">
-                Pre-Marriage Counseling
-              </h3>
-              <p className="text-center text-sm leading-relaxed text-gray-600 sm:text-base">
-                Prepare for a successful marriage with guidance on communication, expectations, and building a strong foundation together
-              </p>
-            </article>
+          <div className="mx-auto grid max-w-6xl gap-5 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {services.map((service) => (
+              <article
+                key={service.title}
+                className="rounded-xl bg-white p-5 shadow-lg transition-shadow duration-300 hover:shadow-xl sm:p-6 lg:p-8"
+              >
+                <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 sm:mb-6 sm:h-16 sm:w-16">
+                  <svg
+                    className="w-7 h-7 sm:w-8 sm:h-8 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6v12m6-6H6"
+                    />
+                  </svg>
+                </div>
+                <h3 className="mb-3 text-center text-lg font-bold text-gray-900 sm:mb-4 sm:text-xl lg:text-2xl">
+                  {service.title}
+                </h3>
+                <p className="text-center text-sm leading-relaxed text-gray-600 sm:text-base">
+                  {service.description}
+                </p>
+              </article>
+            ))}
           </div>
         </section>
 

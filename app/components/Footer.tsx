@@ -7,7 +7,6 @@ export default function Footer() {
     { href: '/', label: 'Home' },
     { href: '/services', label: 'Services' },
     { href: '/marriage', label: 'Marriage' },
-    { href: '/pre-marriage', label: 'Pre-Marriage Counseling' },
     { href: '/contact', label: 'Contact' }
   ];
 

@@ -2,43 +2,55 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { doc, getDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 interface InquiryDetails {
   id: string;
+  inquiryNumber?: number;
   fullName: string;
   email: string;
   phone: string;
   serviceType: string;
   message: string;
-  status: 'pending' | 'approved' | 'rejected' | 'completed';
+  status: 'pending' | 'approved' | 'rejected' | 'in-review' | 'completed';
   createdAt: Timestamp;
   lastUpdated?: Timestamp;
   assignedTo?: string;
   notes?: string;
 }
 
-export default function InquiryDetailsPage({ params }: { params: { id: string } }) {
+export default function InquiryDetailsPage() {
   const router = useRouter();
+  const params = useParams<{ id?: string | string[] }>();
+  const inquiryId = Array.isArray(params?.id) ? params?.id[0] : params?.id;
   const [inquiry, setInquiry] = useState<InquiryDetails | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [notes, setNotes] = useState('');
+  const [notesDraft, setNotesDraft] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchInquiry = async () => {
+      if (!inquiryId) {
+        setError('Invalid inquiry ID');
+        setLoading(false);
+        return;
+      }
+
       try {
-        const docRef = doc(db, 'inquiries', params.id);
+        const docRef = doc(db, 'inquiries', inquiryId);
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
           const data = docSnap.data();
+          const safeNotes = typeof data.notes === 'string' ? data.notes : '';
           setInquiry({
             id: docSnap.id,
+            inquiryNumber: typeof data.inquiryNumber === 'number' ? data.inquiryNumber : undefined,
             fullName: data.fullName,
             email: data.email,
             phone: data.phone,
@@ -48,9 +60,10 @@ export default function InquiryDetailsPage({ params }: { params: { id: string } 
             createdAt: data.createdAt,
             lastUpdated: data.lastUpdated,
             assignedTo: data.assignedTo,
-            notes: data.notes || ''
+            notes: safeNotes
           });
-          setNotes(data.notes || '');
+          setNotes(safeNotes);
+          setNotesDraft(safeNotes);
         } else {
           setError('Inquiry not found');
         }
@@ -63,15 +76,16 @@ export default function InquiryDetailsPage({ params }: { params: { id: string } 
     };
 
     fetchInquiry();
-  }, [params.id]);
+  }, [inquiryId]);
 
-  const handleStatusUpdate = async (newStatus: 'approved' | 'rejected' | 'completed') => {
+  const handleStatusUpdate = async (newStatus: 'approved' | 'rejected' | 'in-review' | 'completed') => {
     if (!inquiry) return;
     
     setIsUpdating(true);
     
     try {
-      const docRef = doc(db, 'inquiries', params.id);
+      if (!inquiryId) return;
+      const docRef = doc(db, 'inquiries', inquiryId);
       await updateDoc(docRef, {
         status: newStatus,
         lastUpdated: Timestamp.now()
@@ -102,17 +116,20 @@ export default function InquiryDetailsPage({ params }: { params: { id: string } 
     setIsUpdating(true);
     
     try {
-      const docRef = doc(db, 'inquiries', params.id);
+      if (!inquiryId) return;
+      const docRef = doc(db, 'inquiries', inquiryId);
       await updateDoc(docRef, {
-        notes: notes,
+        notes: notesDraft,
         lastUpdated: Timestamp.now()
       });
       
       setInquiry({
         ...inquiry,
-        notes: notes,
+        notes: notesDraft,
         lastUpdated: Timestamp.now()
       });
+
+      setNotes(notesDraft);
       
       setShowSuccessMessage(true);
       
@@ -135,6 +152,8 @@ export default function InquiryDetailsPage({ params }: { params: { id: string } 
         return 'bg-green-100 text-green-800 border-green-200';
       case 'rejected':
         return 'bg-red-100 text-red-800 border-red-200';
+      case 'in-review':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'completed':
         return 'bg-blue-100 text-blue-800 border-blue-200';
       default:
@@ -152,6 +171,14 @@ export default function InquiryDetailsPage({ params }: { params: { id: string } 
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const formatInquiryNumber = (id: string, inquiryNumber?: number) => {
+    if (typeof inquiryNumber === 'number') return inquiryNumber.toString();
+    const chunk = id.slice(-6);
+    const parsed = Number.parseInt(chunk, 36);
+    if (Number.isNaN(parsed)) return id.slice(-4);
+    return parsed.toString();
   };
 
   if (loading) {
@@ -215,7 +242,7 @@ export default function InquiryDetailsPage({ params }: { params: { id: string } 
                 <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
               </svg>
               <span className="ml-2 font-medium text-gray-900" aria-current="page">
-                #{inquiry.id}
+                #{formatInquiryNumber(inquiry.id, inquiry.inquiryNumber)}
               </span>
             </li>
           </ol>
@@ -237,7 +264,7 @@ export default function InquiryDetailsPage({ params }: { params: { id: string } 
         <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-              Inquiry #{inquiry.id}
+              Inquiry #{formatInquiryNumber(inquiry.id, inquiry.inquiryNumber)}
             </h1>
             <p className="mt-1 text-sm text-gray-500">
               Submitted on {formatDate(inquiry.createdAt)}
@@ -310,16 +337,16 @@ export default function InquiryDetailsPage({ params }: { params: { id: string } 
                 <textarea
                   id="notes"
                   rows={4}
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                  value={notesDraft}
+                  onChange={(e) => setNotesDraft(e.target.value)}
+                  className="block w-full rounded-md border-gray-300 bg-white text-gray-900 placeholder:text-gray-400 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                   placeholder="Add internal notes about this inquiry..."
                   aria-label="Internal notes"
                 />
                 <div className="mt-3 flex justify-end">
                   <button
                     onClick={handleSaveNotes}
-                    disabled={isUpdating}
+                    disabled={isUpdating || notesDraft.trim() === notes.trim()}
                     className="inline-flex items-center rounded-md bg-gray-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-400"
                   >
                     {isUpdating ? 'Saving...' : 'Save Notes'}
@@ -339,7 +366,7 @@ export default function InquiryDetailsPage({ params }: { params: { id: string } 
               <div className="space-y-3 px-6 py-5">
                 <button
                   onClick={() => handleStatusUpdate('approved')}
-                  disabled={isUpdating || inquiry.status === 'approved'}
+                  disabled={isUpdating || inquiry.status === 'approved' || inquiry.status === 'rejected' || inquiry.status === 'completed'}
                   className="flex w-full items-center justify-center rounded-md bg-green-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-green-400"
                   aria-label="Approve inquiry"
                 >
@@ -351,7 +378,7 @@ export default function InquiryDetailsPage({ params }: { params: { id: string } 
 
                 <button
                   onClick={() => handleStatusUpdate('rejected')}
-                  disabled={isUpdating || inquiry.status === 'rejected'}
+                  disabled={isUpdating || inquiry.status === 'rejected' || inquiry.status === 'approved' || inquiry.status === 'completed'}
                   className="flex w-full items-center justify-center rounded-md bg-red-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-red-400"
                   aria-label="Reject inquiry"
                 >
@@ -362,8 +389,19 @@ export default function InquiryDetailsPage({ params }: { params: { id: string } 
                 </button>
 
                 <button
+                  onClick={() => handleStatusUpdate('in-review')}
+                  disabled={isUpdating || inquiry.status === 'in-review' || inquiry.status === 'approved' || inquiry.status === 'rejected' || inquiry.status === 'completed'}
+                  className="flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-blue-400"
+                  aria-label="Mark inquiry as in review"
+                >
+                  <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Mark as In Review
+                </button>
+                <button
                   onClick={() => handleStatusUpdate('completed')}
-                  disabled={isUpdating || inquiry.status === 'completed'}
+                  disabled={isUpdating || inquiry.status !== 'approved'}
                   className="flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-blue-400"
                   aria-label="Mark inquiry as completed"
                 >
@@ -396,7 +434,7 @@ export default function InquiryDetailsPage({ params }: { params: { id: string } 
                 <dl className="space-y-4">
                   <div>
                     <dt className="text-sm font-medium text-gray-500">Inquiry ID</dt>
-                    <dd className="mt-1 text-sm text-gray-900">#{inquiry.id}</dd>
+                    <dd className="mt-1 text-sm text-gray-900">#{formatInquiryNumber(inquiry.id, inquiry.inquiryNumber)}</dd>
                   </div>
                   <div>
                     <dt className="text-sm font-medium text-gray-500">Date Submitted</dt>

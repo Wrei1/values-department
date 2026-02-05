@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FirebaseError } from 'firebase/app';
-import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, Timestamp, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 
 interface Inquiry {
   id: string;
+  inquiryNumber?: number;
   fullName: string;
   email: string;
   phone: string;
@@ -25,7 +27,6 @@ export default function AdminInquiries() {
   const [error, setError] = useState<string>('');
   const [serviceTypeFilter, setServiceTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -77,6 +78,7 @@ export default function AdminInquiries() {
         (snapshot) => {
           const inquiriesData: Inquiry[] = snapshot.docs.map(doc => ({
             id: doc.id,
+            inquiryNumber: typeof doc.data().inquiryNumber === 'number' ? doc.data().inquiryNumber : undefined,
             fullName: doc.data().fullName || '',
             email: doc.data().email || '',
             phone: doc.data().phone || '',
@@ -106,7 +108,18 @@ export default function AdminInquiries() {
     }
   }, [authChecked, isAuthenticated]);
 
-  const serviceTypes = ['Marriage Counseling', 'Pre-Marriage Counseling', 'Marriage Registration', 'General Inquiry', 'Other'];
+  const serviceTypes = [
+    'Marriage Counseling',
+    'Marriage Registration',
+    'Civil Wedding',
+    'Private Wedding',
+    'Necrological Service',
+    'House blessing',
+    'House to house visitation',
+    'Prayer for the sick',
+    'General Inquiry',
+    'Other'
+  ];
   const statuses = ['pending', 'approved', 'rejected', 'in-review', 'completed'];
 
   // Filter inquiries based on selected filters
@@ -150,6 +163,40 @@ export default function AdminInquiries() {
     }
   };
 
+  const formatInquiryNumber = (id: string, inquiryNumber?: number) => {
+    if (typeof inquiryNumber === 'number') return inquiryNumber.toString();
+    const chunk = id.slice(-6);
+    const parsed = Number.parseInt(chunk, 36);
+    if (Number.isNaN(parsed)) return id.slice(-4);
+    return parsed.toString();
+  };
+
+  const handleStatusUpdate = async (id: string, status: Inquiry['status']) => {
+    try {
+      const docRef = doc(db, 'inquiries', id);
+      await updateDoc(docRef, {
+        status,
+        lastUpdated: Timestamp.now()
+      });
+    } catch (err) {
+      console.error('Error updating inquiry status:', err);
+      alert('Failed to update status. Please try again.');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const confirmed = window.confirm('Are you sure you want to delete this inquiry? This action cannot be undone.');
+    if (!confirmed) return;
+
+    try {
+      const docRef = doc(db, 'inquiries', id);
+      await deleteDoc(docRef);
+    } catch (err) {
+      console.error('Error deleting inquiry:', err);
+      alert('Failed to delete inquiry. Please try again.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -164,7 +211,7 @@ export default function AdminInquiries() {
         </header>
 
         {/* Stats Summary */}
-        <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-labelledby="stats-heading">
+        <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5" aria-labelledby="stats-heading">
           <h2 id="stats-heading" className="sr-only">Inquiry Statistics</h2>
           <div className="rounded-lg bg-white p-4 sm:p-5 shadow" role="region" aria-label="Total inquiries count">
             <p className="text-sm font-medium text-gray-600">Total Inquiries</p>
@@ -188,6 +235,12 @@ export default function AdminInquiries() {
             <p className="text-sm font-medium text-gray-600">In Review</p>
             <p className="mt-1 text-2xl font-semibold text-blue-700" aria-live="polite">
               {isLoading ? '...' : inquiries.filter(i => i.status === 'in-review').length}
+            </p>
+          </div>
+          <div className="rounded-lg bg-white p-4 sm:p-5 shadow" role="region" aria-label="Completed inquiries count">
+            <p className="text-sm font-medium text-gray-600">Completed</p>
+            <p className="mt-1 text-2xl font-semibold text-indigo-700" aria-live="polite">
+              {isLoading ? '...' : inquiries.filter(i => i.status === 'completed').length}
             </p>
           </div>
         </section>
@@ -348,7 +401,7 @@ export default function AdminInquiries() {
                   filteredInquiries.map((inquiry) => (
                     <tr key={inquiry.id} className="transition-colors hover:bg-gray-50">
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
-                        #{inquiry.id.substring(0, 8)}
+                        #{formatInquiryNumber(inquiry.id, inquiry.inquiryNumber)}
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
                         {inquiry.fullName}
@@ -368,13 +421,50 @@ export default function AdminInquiries() {
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                        <button
-                          onClick={() => setSelectedInquiry(inquiry)}
-                          className="min-h-[32px] px-3 py-1.5 text-blue-600 transition-colors hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded-md font-medium"
-                          aria-label={`View details for inquiry from ${inquiry.fullName}`}
-                        >
-                          View
-                        </button>
+                        <div className="flex items-center justify-end gap-3">
+                          <Link
+                            href={`/admin/inquiries/${inquiry.id}`}
+                            className="min-h-[32px] px-3 py-1.5 text-blue-600 transition-colors hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded-md font-medium"
+                            aria-label={`View details for inquiry from ${inquiry.fullName}`}
+                          >
+                            View
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => handleStatusUpdate(inquiry.id, 'approved')}
+                            disabled={inquiry.status === 'approved' || inquiry.status === 'rejected' || inquiry.status === 'completed'}
+                            className="min-h-[32px] px-3 py-1.5 text-green-600 transition-colors hover:text-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1 rounded-md font-medium disabled:cursor-not-allowed disabled:text-gray-400"
+                            aria-label={`Approve inquiry from ${inquiry.fullName}`}
+                          >
+                            Approve
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleStatusUpdate(inquiry.id, 'rejected')}
+                            disabled={inquiry.status === 'rejected' || inquiry.status === 'approved' || inquiry.status === 'completed'}
+                            className="min-h-[32px] px-3 py-1.5 text-red-600 transition-colors hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 rounded-md font-medium disabled:cursor-not-allowed disabled:text-gray-400"
+                            aria-label={`Reject inquiry from ${inquiry.fullName}`}
+                          >
+                            Reject
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleStatusUpdate(inquiry.id, 'in-review')}
+                            disabled={inquiry.status === 'in-review' || inquiry.status === 'approved' || inquiry.status === 'rejected' || inquiry.status === 'completed'}
+                            className="min-h-[32px] px-3 py-1.5 text-blue-600 transition-colors hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 rounded-md font-medium disabled:cursor-not-allowed disabled:text-gray-400"
+                            aria-label={`Mark inquiry from ${inquiry.fullName} as in review`}
+                          >
+                            In Review
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(inquiry.id)}
+                            className="min-h-[32px] px-3 py-1.5 text-gray-500 transition-colors hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-1 rounded-md font-medium"
+                            aria-label={`Delete inquiry from ${inquiry.fullName}`}
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -412,7 +502,7 @@ export default function AdminInquiries() {
                   <div className="mb-3 flex items-start justify-between">
                     <div>
                       <h3 className="text-base font-medium text-gray-900">{inquiry.fullName}</h3>
-                      <p className="text-xs text-gray-500">ID: #{inquiry.id.substring(0, 8)}</p>
+                      <p className="text-xs text-gray-500">ID: #{formatInquiryNumber(inquiry.id, inquiry.inquiryNumber)}</p>
                     </div>
                     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${getStatusColor(inquiry.status)}`}>
                       {inquiry.status.replace('-', ' ')}
@@ -432,13 +522,50 @@ export default function AdminInquiries() {
                       <dd className="inline text-gray-600">{formatDate(inquiry.createdAt)}</dd>
                     </div>
                   </dl>
-                  <button
-                    onClick={() => setSelectedInquiry(inquiry)}
-                    className="mt-3 min-h-[44px] inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 transition-colors hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
-                    aria-label={`View full details for inquiry from ${inquiry.fullName}`}
-                  >
-                    View Details →
-                  </button>
+                  <div className="mt-3 flex flex-wrap gap-3 text-sm font-medium">
+                    <Link
+                      href={`/admin/inquiries/${inquiry.id}`}
+                      className="min-h-[44px] inline-flex items-center px-4 py-2 text-blue-600 transition-colors hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
+                      aria-label={`View full details for inquiry from ${inquiry.fullName}`}
+                    >
+                      View Details →
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => handleStatusUpdate(inquiry.id, 'approved')}
+                      disabled={inquiry.status === 'approved' || inquiry.status === 'rejected' || inquiry.status === 'completed'}
+                      className="min-h-[44px] inline-flex items-center px-4 py-2 text-green-600 transition-colors hover:text-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 rounded-md disabled:cursor-not-allowed disabled:text-gray-400"
+                      aria-label={`Approve inquiry from ${inquiry.fullName}`}
+                    >
+                      Approve
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleStatusUpdate(inquiry.id, 'rejected')}
+                      disabled={inquiry.status === 'rejected' || inquiry.status === 'approved' || inquiry.status === 'completed'}
+                      className="min-h-[44px] inline-flex items-center px-4 py-2 text-red-600 transition-colors hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-md disabled:cursor-not-allowed disabled:text-gray-400"
+                      aria-label={`Reject inquiry from ${inquiry.fullName}`}
+                    >
+                      Reject
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleStatusUpdate(inquiry.id, 'in-review')}
+                      disabled={inquiry.status === 'in-review' || inquiry.status === 'approved' || inquiry.status === 'rejected' || inquiry.status === 'completed'}
+                      className="min-h-[44px] inline-flex items-center px-4 py-2 text-blue-600 transition-colors hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md disabled:cursor-not-allowed disabled:text-gray-400"
+                      aria-label={`Mark inquiry from ${inquiry.fullName} as in review`}
+                    >
+                      In Review
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(inquiry.id)}
+                      className="min-h-[44px] inline-flex items-center px-4 py-2 text-gray-500 transition-colors hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 rounded-md"
+                      aria-label={`Delete inquiry from ${inquiry.fullName}`}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ))
             ) : (
@@ -449,111 +576,6 @@ export default function AdminInquiries() {
           </div>
         </div>
 
-        {/* Detail Modal/Panel */}
-        {selectedInquiry && (
-          <div
-            className="fixed inset-0 z-50 overflow-y-auto"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="inquiry-detail-title"
-          >
-            <div className="flex min-h-screen items-center justify-center p-4">
-              {/* Overlay */}
-              <div
-                className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-                onClick={() => setSelectedInquiry(null)}
-                aria-hidden="true"
-              />
-              
-              {/* Modal */}
-              <div className="relative z-50 w-full max-w-2xl rounded-lg bg-white shadow-xl">
-                <div className="border-b border-gray-200 px-6 py-4">
-                  <div className="flex items-start justify-between">
-                    <h2 id="inquiry-detail-title" className="text-xl font-semibold text-gray-900">
-                      Inquiry Details
-                    </h2>
-                    <button
-                      onClick={() => setSelectedInquiry(null)}
-                      className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-md text-gray-500 transition-colors hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      aria-label="Close inquiry details modal"
-                    >
-                      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="px-6 py-4">
-                  <dl className="space-y-4">
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">ID</dt>
-                      <dd className="mt-1 text-sm text-gray-900">#{selectedInquiry.id}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Name</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{selectedInquiry.fullName}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Email</dt>
-                      <dd className="mt-1 text-sm text-gray-900">
-                        <a href={`mailto:${selectedInquiry.email}`} className="text-blue-600 hover:text-blue-500">
-                          {selectedInquiry.email}
-                        </a>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Phone</dt>
-                      <dd className="mt-1 text-sm text-gray-900">
-                        <a href={`tel:${selectedInquiry.phone}`} className="text-blue-600 hover:text-blue-500">
-                          {selectedInquiry.phone}
-                        </a>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Service Type</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{selectedInquiry.serviceType}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Date Submitted</dt>
-                      <dd className="mt-1 text-sm text-gray-900">{formatDate(selectedInquiry.createdAt)}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Status</dt>
-                      <dd className="mt-1">
-                        <span className={`inline-flex rounded-full px-3 py-1 text-sm font-medium capitalize ${getStatusColor(selectedInquiry.status)}`}>
-                          {selectedInquiry.status.replace('-', ' ')}
-                        </span>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Message</dt>
-                      <dd className="mt-1 text-sm leading-relaxed text-gray-900">{selectedInquiry.message}</dd>
-                    </div>
-                  </dl>
-                </div>
-                
-                <div className="border-t border-gray-200 px-6 py-4">
-                  <div className="flex flex-col sm:flex-row justify-end gap-3">
-                    <button
-                      onClick={() => setSelectedInquiry(null)}
-                      className="min-h-[48px] w-full sm:w-auto rounded-md bg-white px-5 py-3 text-base font-medium text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                      aria-label="Close inquiry details"
-                    >
-                      Close
-                    </button>
-                    <button 
-                      className="min-h-[48px] w-full sm:w-auto rounded-md bg-blue-600 px-5 py-3 text-base font-medium text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                      aria-label="Update inquiry status"
-                    >
-                      Update Status
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

@@ -2,11 +2,14 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Contact Us | Values Department Government Services',
-  description: 'Contact the Values Department for marriage counseling, pre-marriage counseling inquiries, and family support services. Submit your inquiry and our team will respond promptly.',
+  description: 'Contact the Values Department for marriage counseling, wedding services, and community support. Submit your inquiry and our team will respond promptly.',
   keywords: [
     'contact values department',
     'counseling inquiry',
     'marriage counseling contact',
+    'wedding services inquiry',
+    'civil wedding contact',
+    'private wedding contact',
     'government services contact',
     'family services inquiry',
     'counseling appointment',

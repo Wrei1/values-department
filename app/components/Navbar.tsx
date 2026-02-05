@@ -13,7 +13,6 @@ export default function Navbar() {
     { href: '/', label: 'Home' },
     { href: '/services', label: 'Services' },
     { href: '/marriage', label: 'Marriage' },
-    { href: '/pre-marriage', label: 'Pre-Marriage Counseling' },
     { href: '/contact', label: 'Contact' },
   ];
 
@@ -71,7 +70,7 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden space-x-1 md:flex" role="list">
+          <div className="hidden items-center space-x-1 md:flex" role="list">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -87,6 +86,13 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
+            <Link
+              href="/admin"
+              className="ml-2 inline-flex min-h-[36px] items-center rounded-md border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 transition-all hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              aria-label="Go to admin panel"
+            >
+              Admin
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -156,6 +162,15 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
+          <Link
+            href="/admin"
+            onClick={() => setIsMenuOpen(false)}
+            className="mt-2 flex min-h-[44px] items-center justify-center rounded-md border border-blue-600 px-4 py-3 text-base font-semibold text-blue-600 transition-all hover:bg-blue-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+            aria-label="Go to admin panel"
+            tabIndex={isMenuOpen ? 0 : -1}
+          >
+            Admin
+          </Link>
         </nav>
       </div>
     </nav>

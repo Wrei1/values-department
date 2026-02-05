@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, FormEvent, ChangeEvent } from 'react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 interface FormData {
@@ -36,8 +36,13 @@ export default function Contact() {
 
   const serviceTypes = [
     'Marriage Counseling',
-    'Pre-Marriage Counseling',
     'Marriage Registration',
+    'Civil Wedding',
+    'Private Wedding',
+    'Necrological Service',
+    'House blessing',
+    'House to house visitation',
+    'Prayer for the sick',
     'General Inquiry',
     'Other'
   ];
@@ -108,15 +113,27 @@ export default function Contact() {
     setSubmitError('');
 
     try {
-      // Save to Firebase Firestore
-      await addDoc(collection(db, 'inquiries'), {
-        fullName: formData.fullName.trim(),
-        email: formData.email.trim(),
-        phone: formData.phone.trim(),
-        serviceType: formData.serviceType,
-        message: formData.message.trim(),
-        status: 'pending',
-        createdAt: serverTimestamp(),
+      // Save to Firebase Firestore with sequential inquiry number
+      await runTransaction(db, async (transaction) => {
+        const counterRef = doc(db, 'meta', 'counters');
+        const counterSnap = await transaction.get(counterRef);
+        const currentCount = counterSnap.exists() && typeof counterSnap.data().inquiries === 'number'
+          ? counterSnap.data().inquiries
+          : 0;
+        const nextCount = currentCount + 1;
+
+        const inquiryRef = doc(collection(db, 'inquiries'));
+        transaction.set(counterRef, { inquiries: nextCount }, { merge: true });
+        transaction.set(inquiryRef, {
+          inquiryNumber: nextCount,
+          fullName: formData.fullName.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim(),
+          serviceType: formData.serviceType,
+          message: formData.message.trim(),
+          status: 'pending',
+          createdAt: serverTimestamp(),
+        });
       });
 
       setIsSubmitted(true);

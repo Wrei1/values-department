@@ -3,11 +3,16 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Our Services | Values Department Government Counseling',
-  description: 'Explore our government counseling services including marriage counseling and pre-marriage counseling programs. Professional guidance for couples and families.',
+  description: 'Explore our government services including marriage counseling, wedding services, and community support programs. Professional guidance and care for families and communities.',
   keywords: [
     'counseling services',
     'marriage counseling services',
-    'pre-marriage counseling',
+    'wedding services',
+    'civil wedding',
+    'private wedding',
+    'house blessing',
+    'prayer for the sick',
+    'necrological service',
     'government counseling programs',
     'family support services',
     'relationship guidance',
@@ -17,7 +22,7 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: 'Our Services | Values Department',
-    description: 'Professional marriage and pre-marriage counseling services provided by the Values Department.',
+    description: 'Professional marriage counseling, wedding services, and community support provided by the Values Department.',
     type: 'website',
   },
 };
@@ -52,9 +57,9 @@ export default function Services() {
       ]
     },
     {
-      title: 'Pre-Marriage Counseling',
-      description: 'Prepare for a successful marriage with comprehensive pre-marital guidance. Learn essential skills for building a strong foundation, understanding expectations, and navigating life together as partners.',
-      href: '/pre-marriage',
+      title: 'Marriage Registration',
+      description: 'Guidance and support for official marriage registration, documentation preparation, and compliance requirements for civil ceremonies.',
+      href: '/marriage',
       icon: (
         <svg 
           className="w-12 h-12 text-blue-600" 
@@ -67,15 +72,177 @@ export default function Services() {
             strokeLinecap="round" 
             strokeLinejoin="round" 
             strokeWidth={2} 
-            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" 
+            d="M9 12h6m-6 4h6m2 6H7a2 2 0 01-2-2V6a2 2 0 012-2h6l6 6v10a2 2 0 01-2 2z" 
           />
         </svg>
       ),
       features: [
-        'Relationship assessment',
-        'Financial planning discussions',
-        'Family values alignment',
-        'Future goal setting'
+        'Document review and guidance',
+        'Civil requirements checklist',
+        'Appointment scheduling support',
+        'Registration status updates'
+      ]
+    },
+    {
+      title: 'Civil Wedding',
+      description: 'Civil wedding services with clear guidance on requirements, scheduling, and ceremony preparation.',
+      href: '/marriage',
+      icon: (
+        <svg 
+          className="w-12 h-12 text-blue-600" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={2} 
+            d="M8 9l4-4 4 4m-8 6l4 4 4-4M6 21h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" 
+          />
+        </svg>
+      ),
+      features: [
+        'Eligibility and requirements',
+        'Schedule and venue support',
+        'Certificate processing',
+        'Step-by-step guidance'
+      ]
+    },
+    {
+      title: 'Private Wedding',
+      description: 'Private wedding facilitation with personalized support for documentation and ceremony coordination.',
+      href: '/marriage',
+      icon: (
+        <svg 
+          className="w-12 h-12 text-blue-600" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={2} 
+            d="M12 6l2 4 4 .5-3 3 .7 4.5L12 15l-3.7 2 0.7-4.5-3-3 4-.5 2-4z" 
+          />
+        </svg>
+      ),
+      features: [
+        'Customized ceremony support',
+        'Documentation assistance',
+        'Appointment coordination',
+        'Private venue guidance'
+      ]
+    },
+    {
+      title: 'Necrological Service',
+      description: 'Support and guidance for families during times of loss, including documentation and scheduling assistance.',
+      href: '/contact',
+      icon: (
+        <svg 
+          className="w-12 h-12 text-blue-600" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={2} 
+            d="M12 6v6l4 2M5 20h14a2 2 0 002-2V8l-6-4H5a2 2 0 00-2 2v12a2 2 0 002 2z" 
+          />
+        </svg>
+      ),
+      features: [
+        'Compassionate guidance',
+        'Schedule coordination',
+        'Document support',
+        'Family assistance'
+      ]
+    },
+    {
+      title: 'House blessing',
+      description: 'Arrange a house blessing with coordinated scheduling and community support.',
+      href: '/contact',
+      icon: (
+        <svg 
+          className="w-12 h-12 text-blue-600" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={2} 
+            d="M3 12l9-9 9 9v8a2 2 0 01-2 2H5a2 2 0 01-2-2v-8z" 
+          />
+        </svg>
+      ),
+      features: [
+        'Scheduling coordination',
+        'Preparation checklist',
+        'Community support',
+        'Event guidance'
+      ]
+    },
+    {
+      title: 'House to house visitation',
+      description: 'Community visitation support for families needing outreach, counseling, or guidance.',
+      href: '/contact',
+      icon: (
+        <svg 
+          className="w-12 h-12 text-blue-600" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={2} 
+            d="M5 12h14M5 12l4-4m-4 4l4 4" 
+          />
+        </svg>
+      ),
+      features: [
+        'Home visit scheduling',
+        'Pastoral counseling support',
+        'Family outreach',
+        'Follow-up coordination'
+      ]
+    },
+    {
+      title: 'Prayer for the sick',
+      description: 'Request prayer and support for the sick with compassionate follow-up and scheduling.',
+      href: '/contact',
+      icon: (
+        <svg 
+          className="w-12 h-12 text-blue-600" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={2} 
+            d="M12 6v12m6-6H6" 
+          />
+        </svg>
+      ),
+      features: [
+        'Prayer request intake',
+        'Scheduling and visits',
+        'Confidential support',
+        'Compassionate follow-up'
       ]
     }
   ];
@@ -96,7 +263,7 @@ export default function Services() {
         {/* Services Grid */}
         <section aria-labelledby="services-list">
           <h2 id="services-list" className="sr-only">Available Counseling Services</h2>
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 mb-12">
           {services.map((service) => (
             <article
               key={service.href}
