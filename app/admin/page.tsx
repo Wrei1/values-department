@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { FirebaseError } from 'firebase/app';
 import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth, db } from '@/lib/firebase';
 
 interface Inquiry {
   id: string;
@@ -18,9 +20,12 @@ interface Inquiry {
 }
 
 export default function AdminDashboard() {
+  const router = useRouter();
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const formatFirestoreError = (err: unknown) => {
     if (err instanceof FirebaseError) {
@@ -35,8 +40,27 @@ export default function AdminDashboard() {
     return 'Unknown error.';
   };
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      const isAuthed = !!user;
+      setIsAuthenticated(isAuthed);
+      setAuthChecked(true);
+
+      if (!isAuthed) {
+        setError('Please sign in to view inquiries.');
+        setIsLoading(false);
+        router.push('/admin/login');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [router]);
+
   // Fetch inquiries from Firestore with real-time updates
   useEffect(() => {
+    if (!authChecked) return;
+    if (!isAuthenticated) return;
+
     setIsLoading(true);
     setError('');
 
@@ -78,7 +102,7 @@ export default function AdminDashboard() {
       setError(`Failed to connect to database. ${details}`);
       setIsLoading(false);
     }
-  }, []);
+  }, [authChecked, isAuthenticated]);
 
   const totalSubmissions = inquiries.length;
   const pendingRequests = inquiries.filter(i => i.status === 'pending').length;

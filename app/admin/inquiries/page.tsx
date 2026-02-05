@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { FirebaseError } from 'firebase/app';
 import { collection, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth, db } from '@/lib/firebase';
 
 interface Inquiry {
   id: string;
@@ -17,12 +19,15 @@ interface Inquiry {
 }
 
 export default function AdminInquiries() {
+  const router = useRouter();
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [serviceTypeFilter, setServiceTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const formatFirestoreError = (err: unknown) => {
     if (err instanceof FirebaseError) {
@@ -37,8 +42,27 @@ export default function AdminInquiries() {
     return 'Unknown error.';
   };
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      const isAuthed = !!user;
+      setIsAuthenticated(isAuthed);
+      setAuthChecked(true);
+
+      if (!isAuthed) {
+        setError('Please sign in to view inquiries.');
+        setIsLoading(false);
+        router.push('/admin/login');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [router]);
+
   // Fetch inquiries from Firestore with real-time updates
   useEffect(() => {
+    if (!authChecked) return;
+    if (!isAuthenticated) return;
+
     setIsLoading(true);
     setError('');
 
@@ -80,7 +104,7 @@ export default function AdminInquiries() {
       setError(`Failed to connect to database. ${details}`);
       setIsLoading(false);
     }
-  }, []);
+  }, [authChecked, isAuthenticated]);
 
   const serviceTypes = ['Marriage Counseling', 'Pre-Marriage Counseling', 'Marriage Registration', 'General Inquiry', 'Other'];
   const statuses = ['pending', 'approved', 'rejected', 'in-review', 'completed'];
