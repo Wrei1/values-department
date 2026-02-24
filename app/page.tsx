@@ -35,21 +35,10 @@ export const metadata: Metadata = {
 export default function Home() {
   const services = [
     {
-      title: 'Marriage Counseling',
-      description: 'Professional support for couples seeking to strengthen their relationship, resolve conflicts, and build a lasting partnership.'
-    },
-    {
-      title: 'Marriage Registration',
-      description: 'Guidance on official registration, documentation, and civil requirements for marriage services.'
-    },
-    {
       title: 'Civil Wedding',
       description: 'Clear guidance and support for civil wedding requirements, scheduling, and certificates.'
     },
-    {
-      title: 'Private Wedding',
-      description: 'Personalized assistance for private wedding coordination and documentation support.'
-    },
+
     {
       title: 'Necrological Service',
       description: 'Compassionate support and coordination for families during times of loss.'
@@ -74,10 +63,18 @@ export default function Home() {
         {/* Hero Section */}
         <section className="mb-12 text-center sm:mb-16 lg:mb-20" aria-labelledby="hero-heading">
           <h1 id="hero-heading" className="mb-4 text-3xl font-extrabold tracking-tight text-gray-900 sm:mb-6 sm:text-4xl md:text-5xl lg:text-6xl">
-            Values Department
+            Municipal Values Formation and Chaplaincy
           </h1>
           <p className="mx-auto max-w-3xl px-2 text-base leading-relaxed text-gray-600 sm:px-0 sm:text-lg md:text-xl lg:text-2xl">
-            Strengthening families and communities through professional counseling and support services
+            Mission Statement <br />
+            
+The mission of the Municipal Values Formation and Chaplaincy Service Unit is to foster a culture of integrity, compassion, and service among local government employees and the community. Through spiritual guidance, moral development, and transformative programs, we aim to promote ethical conduct, strengthen community ties, and support the holistic well-being of Individuals, ensuring that they live out values of respect, empathy, and accountability in both personal and professional spheres.
+          </p>
+           <p className="mx-auto max-w-3xl px-2 text-base leading-relaxed text-gray-600 sm:px-0 sm:text-lg md:text-xl lg:text-2xl">
+            Vision Statement <br />
+            
+VISION STATEMENT
+The vision of the Municipal Values Formation and Chaplaincy Service Unit is to create a transformative environment where local government employees and the community are empowered by strong moral values, spiritual growth, and a commitment to service, fostering a culture of integrity, compassion, and social responsibility for the greater good of society.
           </p>
         </section>
 
@@ -87,35 +84,46 @@ export default function Home() {
             Our Services
           </h2>
           <div className="mx-auto grid max-w-6xl gap-5 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {services.map((service) => (
-              <article
-                key={service.title}
-                className="rounded-xl bg-white p-5 shadow-lg transition-shadow duration-300 hover:shadow-xl sm:p-6 lg:p-8"
-              >
-                <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 sm:mb-6 sm:h-16 sm:w-16">
-                  <svg
-                    className="w-7 h-7 sm:w-8 sm:h-8 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6v12m6-6H6"
-                    />
-                  </svg>
-                </div>
-                <h3 className="mb-3 text-center text-lg font-bold text-gray-900 sm:mb-4 sm:text-xl lg:text-2xl">
-                  {service.title}
-                </h3>
-                <p className="text-center text-sm leading-relaxed text-gray-600 sm:text-base">
-                  {service.description}
-                </p>
-              </article>
-            ))}
+            {services.map((service) => {
+              const href = service.title === 'Civil Wedding'
+                ? '/marriage'
+                : service.title === 'Necrological Service'
+                ? '/services/necrological-service'
+                : service.title === 'House blessing'
+                ? '/services/house-blessing'
+                : service.title === 'House to house visitation'
+                ? '/services/house-to-house-visitation'
+                : service.title === 'Prayer for the sick'
+                ? '/services/prayer-for-the-sick'
+                : '/services';
+
+              return (
+                <Link key={service.title} href={href} className="rounded-xl bg-white p-5 shadow-lg transition-shadow duration-300 hover:shadow-xl sm:p-6 lg:p-8 block">
+                  <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 sm:mb-6 sm:h-16 sm:w-16">
+                    <svg
+                      className="w-7 h-7 sm:w-8 sm:h-8 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6v12m6-6H6"
+                      />
+                    </svg>
+                  </div>
+                  <h3 className="mb-3 text-center text-lg font-bold text-gray-900 sm:mb-4 sm:text-xl lg:text-2xl">
+                    {service.title}
+                  </h3>
+                  <p className="text-center text-sm leading-relaxed text-gray-600 sm:text-base">
+                    {service.description}
+                  </p>
+                </Link>
+              );
+            })}
           </div>
         </section>
 

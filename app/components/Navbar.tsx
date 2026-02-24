@@ -1,8 +1,10 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
+import logo from '../Images/Logo.jpg';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -11,8 +13,11 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/', label: 'Home' },
-    { href: '/services', label: 'Services' },
-    { href: '/marriage', label: 'Marriage' },
+    { href: '/marriage', label: 'Civil Wedding' },
+    { href: '/services/necrological-service', label: 'Necrological Service' },
+    { href: '/services/house-blessing', label: 'House blessing' },
+    { href: '/services/house-to-house-visitation', label: 'House to house visitation' },
+    { href: '/services/prayer-for-the-sick', label: 'Prayer for the sick' },
     { href: '/contact', label: 'Contact' },
   ];
 
@@ -58,15 +63,17 @@ export default function Navbar() {
             className="flex items-center space-x-2 rounded-md text-lg sm:text-xl font-bold text-blue-600 transition-colors hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 min-h-[44px]"
             aria-label="Values Department - Home"
           >
-            <svg 
-              className="w-7 h-7 sm:w-8 sm:h-8" 
-              fill="currentColor" 
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5zm0 18c-3.866 0-7-3.134-7-7s3.134-7 7-7 7 3.134 7 7-3.134 7-7 7zm-1-11h2v6h-2zm0 8h2v2h-2z"/>
-            </svg>
-            <span className="hidden sm:inline">Values Department</span>
+            <Image
+              src={logo}
+              alt="Municipal Values Formation and Chaplaincy logo"
+              width={48}
+              height={48}
+              quality={100}
+              className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+              priority
+              unoptimized={false}
+            />
+            <span className="hidden sm:inline">MVFC</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -76,9 +83,7 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 className={`rounded-md px-4 py-2 text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                  isActive(link.href)
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                  isActive(link.href) ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
                 }`}
                 aria-current={isActive(link.href) ? 'page' : undefined}
                 tabIndex={0}
@@ -140,7 +145,7 @@ export default function Navbar() {
         aria-label="Mobile navigation menu"
         aria-hidden={!isMenuOpen}
       >
-        <nav className="space-y-1 px-4 pb-4 pt-2" role="list">
+          <nav className="space-y-1 px-4 pb-4 pt-2" role="list">
           {navLinks.map((link, index) => (
             <Link
               key={link.href}

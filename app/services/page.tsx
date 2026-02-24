@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import Image from 'next/image';
+import civilLogo from '../Images/CivilWedLogo.png';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -29,79 +31,20 @@ export const metadata: Metadata = {
 
 export default function Services() {
   const services = [
-    {
-      title: 'Marriage Counseling',
-      description: 'Professional guidance for married couples to strengthen their relationship, improve communication, and work through challenges together. Our experienced counselors provide a safe, confidential space for healing and growth.',
-      href: '/marriage',
-      icon: (
-        <svg 
-          className="w-12 h-12 text-blue-600" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth={2} 
-            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
-          />
-        </svg>
-      ),
-      features: [
-        'Conflict resolution strategies',
-        'Communication skills development',
-        'Trust rebuilding exercises',
-        'Long-term relationship planning'
-      ]
-    },
-    {
-      title: 'Marriage Registration',
-      description: 'Guidance and support for official marriage registration, documentation preparation, and compliance requirements for civil ceremonies.',
-      href: '/marriage',
-      icon: (
-        <svg 
-          className="w-12 h-12 text-blue-600" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth={2} 
-            d="M9 12h6m-6 4h6m2 6H7a2 2 0 01-2-2V6a2 2 0 012-2h6l6 6v10a2 2 0 01-2 2z" 
-          />
-        </svg>
-      ),
-      features: [
-        'Document review and guidance',
-        'Civil requirements checklist',
-        'Appointment scheduling support',
-        'Registration status updates'
-      ]
-    },
+    
     {
       title: 'Civil Wedding',
       description: 'Civil wedding services with clear guidance on requirements, scheduling, and ceremony preparation.',
       href: '/marriage',
       icon: (
-        <svg 
-          className="w-12 h-12 text-blue-600" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
+        <Image
+          src={civilLogo}
+          alt="Civil Wedding logo"
+          width={48}
+          height={48}
+          className="w-12 h-12 object-contain"
           aria-hidden="true"
-        >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth={2} 
-            d="M8 9l4-4 4 4m-8 6l4 4 4-4M6 21h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" 
-          />
-        </svg>
+        />
       ),
       features: [
         'Eligibility and requirements',
@@ -110,33 +53,7 @@ export default function Services() {
         'Step-by-step guidance'
       ]
     },
-    {
-      title: 'Private Wedding',
-      description: 'Private wedding facilitation with personalized support for documentation and ceremony coordination.',
-      href: '/marriage',
-      icon: (
-        <svg 
-          className="w-12 h-12 text-blue-600" 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            strokeWidth={2} 
-            d="M12 6l2 4 4 .5-3 3 .7 4.5L12 15l-3.7 2 0.7-4.5-3-3 4-.5 2-4z" 
-          />
-        </svg>
-      ),
-      features: [
-        'Customized ceremony support',
-        'Documentation assistance',
-        'Appointment coordination',
-        'Private venue guidance'
-      ]
-    },
+    
     {
       title: 'Necrological Service',
       description: 'Support and guidance for families during times of loss, including documentation and scheduling assistance.',
@@ -247,6 +164,11 @@ export default function Services() {
     }
   ];
 
+  // warn if multiple services share the same href (causes React key conflicts)
+  const hrefs = services.map(s => s.href);
+  const dupes = hrefs.filter((h, i) => hrefs.indexOf(h) !== i);
+  if (dupes.length) console.warn('Duplicate service hrefs:', Array.from(new Set(dupes)));
+
   return (
     <main className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -264,9 +186,9 @@ export default function Services() {
         <section aria-labelledby="services-list">
           <h2 id="services-list" className="sr-only">Available Counseling Services</h2>
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 mb-12">
-          {services.map((service) => (
+          {services.map((service, i) => (
             <article
-              key={service.href}
+              key={`${service.title ?? service.href}-${i}`}
               className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300"
             >
               <div className="p-8">

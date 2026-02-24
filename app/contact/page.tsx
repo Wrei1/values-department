@@ -36,10 +36,7 @@ export default function Contact() {
   const [submitError, setSubmitError] = useState<string>('');
 
   const serviceTypes = [
-    'Marriage Counseling',
-    'Marriage Registration',
     'Civil Wedding',
-    'Private Wedding',
     'Necrological Service',
     'House blessing',
     'House to house visitation',
@@ -270,7 +267,7 @@ export default function Contact() {
                   className={`w-full px-3 py-3 sm:px-4 text-base text-gray-900 placeholder-gray-400 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors min-h-[48px] ${
                     errors.email ? 'border-red-500' : 'border-gray-300'
                   }`}
-                  placeholder="your.email@example.com"
+                  placeholder="mvfcrodriguez@gmail.com"
                   aria-invalid={errors.email ? 'true' : 'false'}
                   aria-describedby={errors.email ? 'email-error' : undefined}
                 />
@@ -295,7 +292,7 @@ export default function Contact() {
                   className={`w-full px-3 py-3 sm:px-4 text-base text-gray-900 placeholder-gray-400 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors min-h-[48px] ${
                     errors.phone ? 'border-red-500' : 'border-gray-300'
                   }`}
-                  placeholder="+1 (555) 123-4567"
+                  placeholder="+63 993-7764-673"
                   aria-invalid={errors.phone ? 'true' : 'false'}
                   aria-describedby={errors.phone ? 'phone-error' : undefined}
                 />
@@ -411,7 +408,7 @@ export default function Contact() {
               </svg>
             </div>
             <h3 className="font-semibold text-gray-900 mb-2">Phone</h3>
-            <p className="text-gray-600">+1 (555) 123-4567</p>
+            <p className="text-gray-600">+63 993-7764-673</p>
           </div>
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="text-blue-600 mb-3">
@@ -420,7 +417,7 @@ export default function Contact() {
               </svg>
             </div>
             <h3 className="font-semibold text-gray-900 mb-2">Email</h3>
-            <p className="text-gray-600">info@valuesdept.gov</p>
+            <p className="text-gray-600">mvfcrodriguez@gmail.com</p>
           </div>
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="text-blue-600 mb-3">

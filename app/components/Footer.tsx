@@ -18,9 +18,9 @@ export default function Footer() {
           <div>
             <h3 className="mb-4 text-lg font-semibold text-white">Values Department</h3>
             <address className="text-sm leading-relaxed not-italic">
-              <p className="mb-2">Government Administrative Building</p>
-              <p className="mb-2">123 Main Street, Suite 400</p>
-              <p className="mb-4">City, State 12345</p>
+              <p className="mb-2">Municipality of Rodriguez, Rizal</p>
+              <p className="mb-2"> J.P. Rizal St., Barangay Balite</p>
+              <p className="mb-4">Rodriguez, 1860 Rizal, Philippines</p>
             </address>
           </div>
 
@@ -43,8 +43,8 @@ export default function Footer() {
                     d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" 
                   />
                 </svg>
-                <a href="tel:+15551234567" className="transition-colors hover:text-white focus:outline-none focus:underline">
-                  +1 (555) 123-4567
+                <a href="tel:+639937764673" className="transition-colors hover:text-white focus:outline-none focus:underline">
+                  +63 993-7764-673
                 </a>
               </div>
               <div className="flex items-center">
@@ -62,8 +62,8 @@ export default function Footer() {
                     d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" 
                   />
                 </svg>
-                <a href="mailto:info@valuesdept.gov" className="transition-colors hover:text-white focus:outline-none focus:underline">
-                  info@valuesdept.gov
+                <a href="mailto:mvfcrodriguez@gmail.com" className="transition-colors hover:text-white focus:outline-none focus:underline">
+                  mvfcrodriguez@gmail.com
                 </a>
               </div>
               <div className="flex items-start">
