@@ -5,7 +5,14 @@ export default function Footer() {
 
   const quickLinks = [
     { href: '/', label: 'Home' },
-    { href: '/marriage', label: 'Marriage' },
+    { href: '/marriage', label: 'Civil Wedding' },
+    { href: '/pre-marriage', label: 'Pre-Marriage' },
+    { href: '/services/necrological-service', label: 'Necrological Service' },
+    { href: '/services/house-blessing', label: 'House Blessing' },
+    { href: '/services/house-to-house-visitation', label: 'House to House Visitation' },
+    { href: '/services/prayer-for-the-sick', label: 'Prayer for the Sick' },
+    { href: '/services/general-inquiry', label: 'General Inquiry' },
+    { href: '/services/other', label: 'Other Services' },
     { href: '/contact', label: 'Contact' }
   ];
 
@@ -81,8 +88,8 @@ export default function Footer() {
                   />
                 </svg>
                 <div>
-                  <p>Monday - Friday</p>
-                  <p>8:00 AM - 5:00 PM</p>
+                  <p>Monday - Thursday</p>
+                  <p>7:00 AM - 6:00 PM</p>
                 </div>
               </div>
             </div>
